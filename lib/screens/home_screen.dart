@@ -17,8 +17,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Load jobs from the database when the screen is initialized
     Provider.of<JobData>(context, listen: false).loadJobs();
+  }
+
+  void _queueJobs(BuildContext context) {
+      Provider.of<JobData>(context, listen: false).queueJobs();
   }
 
   @override
@@ -37,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              // Add sync logic here
+              _queueJobs(context);
             },
             child: const Text('Sync Jobs'),
           ),

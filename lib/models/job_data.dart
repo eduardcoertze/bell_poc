@@ -25,6 +25,17 @@ class JobData extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> queueJobs() async {
+    final jobsToQueue = await DatabaseHelper.instance.fetchJobsWithStatus("created");
+
+    for (var job in jobsToQueue) {
+      job.status = 'queued';
+      await DatabaseHelper.instance.updateJob(job);
+      _jobs[_jobs.indexOf(job)] = job;
+    }
+    notifyListeners();
+  }
+
   Future<void> deleteJob(int index) async {
     final job = _jobs[index];
     await DatabaseHelper.instance.deleteJob(job.id);
