@@ -58,6 +58,23 @@ class DatabaseHelper {
     });
   }
 
+  Future<List<Job>> getJobsByStatus({required String status, required int limit}) async {
+    final db = await database;
+    final maps = await db.query(
+      'queued_jobs', // table name
+      where: 'status = ?', // filter by status
+      whereArgs: [status], // argument for status
+      limit: limit, // limit the number of records returned
+    );
+
+    return List.generate(maps.length, (i) {
+      return Job(
+        maps[i]['name'] as String,  // Assuming this is a String
+        maps[i]['status'] as String,  // Assuming this is a String
+        maps[i]['id'] as int, // Explicit cast to int
+      );
+    });
+  }
 
   Future<int> updateJob(Job job) async {
     final db = await instance.database;
