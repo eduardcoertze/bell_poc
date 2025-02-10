@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:bell_poc/models/status_text.dart';
@@ -49,4 +50,26 @@ class JobData extends ChangeNotifier {
     _jobs.addAll(jobsFromDb);
     notifyListeners();
   }
+
+  void startTimer() {
+    const oneSecond = Duration(seconds: 1);
+
+    // Run queued jobs every second
+    Timer.periodic(oneSecond, (timer) {
+      print('timer');
+      runQueuedJobs();
+    });
+
+  }
+
+  void runQueuedJobs() {
+    // Example logic to run queued jobs, you can customize this as needed
+    for (var job in _jobs) {
+      if (job.status == 'queued') {
+        print('Running queued job: ${job.name}');
+        // Perform queued job logic (e.g., processing job, etc.)
+      }
+    }
+  }
+
 }

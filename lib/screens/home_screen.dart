@@ -17,11 +17,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Provider.of<JobData>(context, listen: false).loadJobs();
+    Provider.of<JobData>(context, listen: false).loadJobs().then((_) {
+      Provider.of<JobData>(context, listen: false).startTimer();
+    });
   }
 
   void _queueJobs(BuildContext context) {
-      Provider.of<JobData>(context, listen: false).queueJobs();
+    Provider.of<JobData>(context, listen: false).queueJobs();
   }
 
   @override
