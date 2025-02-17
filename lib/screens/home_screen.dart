@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:bell_poc/screens/add_job_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:provider/provider.dart';
 
 import '../models/job_data.dart';
@@ -14,17 +17,95 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+
+  final ValueNotifier<Object?> _taskDataListenable = ValueNotifier(null);
+
+  Future<void> _requestPermissions() async {
+    final NotificationPermission notificationPermission =
+    await FlutterForegroundTask.checkNotificationPermission();
+    if (notificationPermission != NotificationPermission.granted) {
+      await FlutterForegroundTask.requestNotificationPermission();
+    }
+
+    if (Platform.isAndroid) {
+      if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
+        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      }
+
+      if (!await FlutterForegroundTask.canScheduleExactAlarms) {
+        await FlutterForegroundTask.openAlarmsAndRemindersSettings();
+      }
+    }
+  }
+
+  void _initService() {
+    FlutterForegroundTask.init(
+      androidNotificationOptions: AndroidNotificationOptions(
+        channelId: 'foreground_service',
+        channelName: 'Foreground Service Notification',
+        channelDescription:
+        'This notification appears when the foreground service is running.',
+        onlyAlertOnce: true,
+      ),
+      iosNotificationOptions: const IOSNotificationOptions(
+        showNotification: false,
+        playSound: false,
+      ),
+      foregroundTaskOptions: ForegroundTaskOptions(
+        eventAction: ForegroundTaskEventAction.repeat(5000),
+        autoRunOnBoot: true,
+        autoRunOnMyPackageReplaced: true,
+        allowWakeLock: true,
+        allowWifiLock: true,
+      ),
+    );
+  }
+
+  Future<ServiceRequestResult> _startService() async {
+    if (await FlutterForegroundTask.isRunningService) {
+      return FlutterForegroundTask.restartService();
+    } else {
+      return FlutterForegroundTask.startService(
+        serviceId: 256,
+        notificationTitle: 'Foreground Service is running',
+        notificationText: 'Tap to return to the app',
+        notificationIcon: null,
+        notificationButtons: [
+          const NotificationButton(id: 'btn_hello', text: 'hello'),
+        ],
+        notificationInitialRoute: HomeScreen.id,
+        callback: startCallback,
+      );
+    }
+  }
+
+  void _onReceiveTaskData(Object data) {
+    print('onReceiveTaskData: $data');
+    _taskDataListenable.value = data;
+    Provider.of<JobData>(context, listen: false).refreshJobs();
+  }
+
   @override
   void initState() {
     super.initState();
-    Provider.of<JobData>(context, listen: false).loadJobs().then((_) {
-      Provider.of<JobData>(context, listen: false).startTimer();
+    Provider.of<JobData>(context, listen: false).loadJobs();
+
+    FlutterForegroundTask.addTaskDataCallback(_onReceiveTaskData);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _requestPermissions();
+      _initService();
     });
+
   }
 
-  void _queueJobs(BuildContext context) {
-    Provider.of<JobData>(context, listen: false).queueJobs();
+  @override
+  void dispose() {
+    FlutterForegroundTask.removeTaskDataCallback(_onReceiveTaskData);
+    _taskDataListenable.dispose();
+    super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              _queueJobs(context);
+              _startService();
             },
             child: const Text('Sync Jobs'),
           ),

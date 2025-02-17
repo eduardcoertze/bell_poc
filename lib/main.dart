@@ -2,9 +2,11 @@ import 'package:bell_poc/models/job_data.dart';
 import 'package:bell_poc/screens/add_job_screen.dart';
 import 'package:bell_poc/screens/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:provider/provider.dart';
 
 void main() {
+  FlutterForegroundTask.initCommunicationPort();
   runApp(const MyApp());
 }
 
