@@ -26,16 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
     if (notificationPermission != NotificationPermission.granted) {
       await FlutterForegroundTask.requestNotificationPermission();
     }
-
-    if (Platform.isAndroid) {
-      if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
-        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
-      }
-
-      if (!await FlutterForegroundTask.canScheduleExactAlarms) {
-        await FlutterForegroundTask.openAlarmsAndRemindersSettings();
-      }
-    }
   }
 
   void _initService() {
@@ -67,11 +57,11 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       return FlutterForegroundTask.startService(
         serviceId: 256,
-        notificationTitle: 'Foreground Service is running',
+        notificationTitle: 'Sync in progress',
         notificationText: 'Tap to return to the app',
         notificationIcon: null,
         notificationButtons: [
-          const NotificationButton(id: 'btn_hello', text: 'hello'),
+          const NotificationButton(id: 'btn_hello', text: 'Return to Bell'),
         ],
         notificationInitialRoute: HomeScreen.id,
         callback: startCallback,
@@ -83,12 +73,19 @@ class _HomeScreenState extends State<HomeScreen> {
     print('onReceiveTaskData: $data');
     _taskDataListenable.value = data;
     Provider.of<JobData>(context, listen: false).refreshJobs();
+    if(data == false){
+      _stopService();
+    }
+  }
+
+  Future<ServiceRequestResult> _stopService() {
+    return FlutterForegroundTask.stopService();
   }
 
   @override
   void initState() {
     super.initState();
-    Provider.of<JobData>(context, listen: false).loadJobs();
+    Provider.of<JobData>(context, listen: false).refreshJobs();
 
     FlutterForegroundTask.addTaskDataCallback(_onReceiveTaskData);
 
@@ -96,7 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _requestPermissions();
       _initService();
     });
-
   }
 
   @override

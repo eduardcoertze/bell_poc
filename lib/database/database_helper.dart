@@ -94,4 +94,15 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
+
+  Future<bool> hasPendingJobs() async {
+    final db = await database;
+    final result = await db.rawQuery('''
+    SELECT COUNT(*) as count FROM queued_jobs 
+    WHERE status NOT IN (?, ?)
+  ''', ['created', 'completed']);
+
+    final count = Sqflite.firstIntValue(result) ?? 0;
+    return count > 0;
+  }
 }
