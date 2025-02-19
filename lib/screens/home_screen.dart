@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onlyAlertOnce: true,
       ),
       iosNotificationOptions: const IOSNotificationOptions(
+        //TODO Show notification is still set to false here
         showNotification: false,
         playSound: false,
       ),
