@@ -13,16 +13,12 @@ void startCallback() {
 }
 
 class MyTaskHandler extends TaskHandler {
-
   static const String updateJobs = 'updateJobs';
 
   bool hasPendingJobs = false;
 
-
   Future<void> _updateJobs() async {
-
     hasPendingJobs = await DatabaseHelper.instance.hasPendingJobs();
-
     FlutterForegroundTask.sendDataToMain(hasPendingJobs);
   }
 
@@ -38,7 +34,8 @@ class MyTaskHandler extends TaskHandler {
   }
 
   Future<void> queueJobs() async {
-    final jobsToQueue = await DatabaseHelper.instance.fetchJobsWithStatus("created");
+    final jobsToQueue =
+        await DatabaseHelper.instance.fetchJobsWithStatus("created");
 
     for (var job in jobsToQueue) {
       job.status = 'queued';
@@ -104,7 +101,8 @@ class MyTaskHandler extends TaskHandler {
     double failureChance = 0.1,
   }) async {
     final random = Random();
-    final delayDuration = Duration(seconds: random.nextInt(maxDelay - minDelay + 1) + minDelay);
+    final delayDuration =
+        Duration(seconds: random.nextInt(maxDelay - minDelay + 1) + minDelay);
     await Future.delayed(delayDuration);
 
     if (random.nextDouble() < failureChance) {
@@ -139,7 +137,6 @@ class MyTaskHandler extends TaskHandler {
     print('onDestroy');
   }
 }
-
 
 class JobData extends ChangeNotifier {
   final List<Job> _jobs = [];

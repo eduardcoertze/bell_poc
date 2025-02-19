@@ -1,7 +1,8 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 import 'dart:async';
+
 import 'package:bell_poc/models/job.dart';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -41,6 +42,7 @@ class DatabaseHelper {
     final result = await db.query('queued_jobs');
     return result.map((e) => Job.fromMap(e)).toList();
   }
+
   Future<List<Job>> fetchJobsWithStatus(String status) async {
     final db = await database;
     final maps = await db.query(
@@ -51,14 +53,15 @@ class DatabaseHelper {
 
     return List.generate(maps.length, (i) {
       return Job(
-        maps[i]['name'] as String,  // Assuming this is a String
-        maps[i]['status'] as String,  // Assuming this is a String
+        maps[i]['name'] as String, // Assuming this is a String
+        maps[i]['status'] as String, // Assuming this is a String
         maps[i]['id'] as int, // Explicit cast to int
       );
     });
   }
 
-  Future<List<Job>> getJobsByStatus({required String status, required int limit}) async {
+  Future<List<Job>> getJobsByStatus(
+      {required String status, required int limit}) async {
     final db = await database;
     final maps = await db.query(
       'queued_jobs', // table name
@@ -69,8 +72,8 @@ class DatabaseHelper {
 
     return List.generate(maps.length, (i) {
       return Job(
-        maps[i]['name'] as String,  // Assuming this is a String
-        maps[i]['status'] as String,  // Assuming this is a String
+        maps[i]['name'] as String, // Assuming this is a String
+        maps[i]['status'] as String, // Assuming this is a String
         maps[i]['id'] as int, // Explicit cast to int
       );
     });

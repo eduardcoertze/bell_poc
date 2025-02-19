@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:bell_poc/screens/add_job_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -17,12 +15,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   final ValueNotifier<Object?> _taskDataListenable = ValueNotifier(null);
 
   Future<void> _requestPermissions() async {
     final NotificationPermission notificationPermission =
-    await FlutterForegroundTask.checkNotificationPermission();
+        await FlutterForegroundTask.checkNotificationPermission();
     if (notificationPermission != NotificationPermission.granted) {
       await FlutterForegroundTask.requestNotificationPermission();
     }
@@ -34,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
         channelId: 'foreground_service',
         channelName: 'Foreground Service Notification',
         channelDescription:
-        'This notification appears when the foreground service is running.',
+            'This notification appears when the foreground service is running.',
         onlyAlertOnce: true,
       ),
       iosNotificationOptions: const IOSNotificationOptions(
@@ -73,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
     print('onReceiveTaskData: $data');
     _taskDataListenable.value = data;
     Provider.of<JobData>(context, listen: false).refreshJobs();
-    if(data == false){
+    if (data == false) {
       _stopService();
     }
   }
@@ -101,7 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _taskDataListenable.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
