@@ -65,49 +65,37 @@ class MyTaskHandler extends TaskHandler {
 
     print("Executing job: ${job.name}");
 
-    FlutterForegroundTask.updateService(
-      notificationTitle: 'Processing Job',
-      notificationText: 'Executing: ${job.name}',
-    );
-
     try {
       await executeJob(minDelay: 2, maxDelay: 10, failureChance: 0.1);
       await DatabaseHelper.instance
           .updateJob(Job(job.name, StatusesText.completed, job.id));
       print("Job completed: ${job.name}");
 
+      int totalJobs = await DatabaseHelper.instance.countJobs();
+      int completedJobs = await DatabaseHelper.instance.countJobsByStatus(StatusesText.completed);
+      double progress = completedJobs / totalJobs;
+
+      FlutterForegroundTask.sendDataToMain(progress);
+
       _updateJobs();
 
-      FlutterForegroundTask.updateService(
-        notificationTitle: 'Job Completed',
-        notificationText: '${job.name} finished successfully',
-      );
     } catch (e) {
       print('Error executing job: $e');
       await DatabaseHelper.instance
           .updateJob(Job(job.name, StatusesText.failed, job.id));
       _updateJobs();
-
-      FlutterForegroundTask.updateService(
-        notificationTitle: 'Job Failed',
-        notificationText: '${job.name} encountered an error',
-      );
     }
   }
 
   Future<void> executeJob({
-    int minDelay = 2,
-    int maxDelay = 10,
-    double failureChance = 0.1,
+    int minDelay = 5,
+    int maxDelay = 20,
+    double failureChance = 0,
   }) async {
     final random = Random();
     final delayDuration =
         Duration(seconds: random.nextInt(maxDelay - minDelay + 1) + minDelay);
     await Future.delayed(delayDuration);
-
-    if (random.nextDouble() < failureChance) {
-      throw Exception("Task failed after ${delayDuration.inSeconds} seconds");
-    }
 
     print("Task completed after ${delayDuration.inSeconds} seconds");
   }

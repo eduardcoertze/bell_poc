@@ -16,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ValueNotifier<Object?> _taskDataListenable = ValueNotifier(null);
+  final ValueNotifier<double> _syncProgress = ValueNotifier(0.0);
 
   Future<void> _requestPermissions() async {
     final NotificationPermission notificationPermission =
@@ -57,10 +58,8 @@ class _HomeScreenState extends State<HomeScreen> {
         serviceId: 256,
         notificationTitle: 'Sync in progress',
         notificationText: 'Tap to return to the app',
-        notificationIcon: null,
-        notificationButtons: [
-          const NotificationButton(id: 'btn_hello', text: 'Return to Bell'),
-        ],
+        notificationIcon: NotificationIcon(
+            metaDataName: 'notification_icon2', backgroundColor: Colors.black),
         notificationInitialRoute: HomeScreen.id,
         callback: startCallback,
       );
@@ -68,15 +67,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onReceiveTaskData(Object data) {
-    print('onReceiveTaskData: $data');
-    _taskDataListenable.value = data;
-    Provider.of<JobData>(context, listen: false).refreshJobs();
-    if (data == false) {
+    if (data is double) {
+      _syncProgress.value = data;
+
+      FlutterForegroundTask.updateService(
+        notificationTitle: 'Sync in progress',
+        notificationText: 'Syncing... ${(data * 100).toInt()}% completed',
+      );
+    } else if (data == false) {
+      _syncProgress.value = 0.0;
       _stopService();
     }
+    Provider.of<JobData>(context, listen: false).refreshJobs();
   }
 
   Future<ServiceRequestResult> _stopService() {
+    _syncProgress.value = 0.0;
     return FlutterForegroundTask.stopService();
   }
 
@@ -108,6 +114,22 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
+          ValueListenableBuilder<double>(
+            valueListenable: _syncProgress,
+            builder: (context, progress, child) {
+              return Visibility(
+                visible: progress > 0.0 && progress < 1.0, // Show only during syncing
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                  child: LinearProgressIndicator(
+                    value: progress, // Progress from 0.0 to 1.0
+                    backgroundColor: Colors.grey[300],
+                    color: Colors.blue,
+                  ),
+                ),
+              );
+            },
+          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pushNamed(context, AddJobScreen.id);

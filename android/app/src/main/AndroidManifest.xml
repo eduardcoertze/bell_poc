@@ -44,6 +44,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <meta-data
+            android:name="notification_icon"
+            android:resource="@drawable/playstore" />
+        <meta-data
+            android:name="notification_icon2"
+            android:resource="@drawable/bell_black_text_test" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

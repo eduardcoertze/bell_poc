@@ -108,4 +108,17 @@ class DatabaseHelper {
     final count = Sqflite.firstIntValue(result) ?? 0;
     return count > 0;
   }
+
+  Future<int> countJobsByStatus(String status) async {
+    final db = await database;
+    final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM queued_jobs WHERE status = ?', [status]);
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  Future<int> countJobs() async {
+    final db = await database;
+    final result = await db.rawQuery('SELECT COUNT(*) as count FROM queued_jobs');
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
 }
