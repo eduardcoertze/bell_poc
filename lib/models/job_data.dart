@@ -46,8 +46,8 @@ class MyTaskHandler extends TaskHandler {
   }
 
   Future<void> runQueuedJobs() async {
-    List<Job> jobs = await DatabaseHelper.instance.getJobsByStatus(
-      status: 'queued',
+    List<Job> jobs = await DatabaseHelper.instance.getJobsByStatuses(
+      statuses: ['queued', 'failed'], // Fetch both queued and failed jobs
       limit: 1,
     );
 
@@ -90,12 +90,16 @@ class MyTaskHandler extends TaskHandler {
   Future<void> executeJob({
     int minDelay = 5,
     int maxDelay = 20,
-    double failureChance = 0,
+    double failureChance = 0.1,
   }) async {
     final random = Random();
     final delayDuration =
         Duration(seconds: random.nextInt(maxDelay - minDelay + 1) + minDelay);
     await Future.delayed(delayDuration);
+
+    if (random.nextDouble() < failureChance) {
+      throw Exception("Task failed after ${delayDuration.inSeconds} seconds");
+    }
 
     print("Task completed after ${delayDuration.inSeconds} seconds");
   }

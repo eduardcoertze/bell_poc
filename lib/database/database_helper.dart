@@ -60,21 +60,25 @@ class DatabaseHelper {
     });
   }
 
-  Future<List<Job>> getJobsByStatus(
-      {required String status, required int limit}) async {
+  Future<List<Job>> getJobsByStatuses({
+    required List<String> statuses,
+    required int limit,
+  }) async {
     final db = await database;
+    final whereClause = 'status IN (${List.filled(statuses.length, '?').join(', ')})';
+
     final maps = await db.query(
-      'queued_jobs', // table name
-      where: 'status = ?', // filter by status
-      whereArgs: [status], // argument for status
-      limit: limit, // limit the number of records returned
+      'queued_jobs',
+      where: whereClause,
+      whereArgs: statuses,
+      limit: limit,
     );
 
     return List.generate(maps.length, (i) {
       return Job(
-        maps[i]['name'] as String, // Assuming this is a String
-        maps[i]['status'] as String, // Assuming this is a String
-        maps[i]['id'] as int, // Explicit cast to int
+        maps[i]['name'] as String,
+        maps[i]['status'] as String,
+        maps[i]['id'] as int,
       );
     });
   }

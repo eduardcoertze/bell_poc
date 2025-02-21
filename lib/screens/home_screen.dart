@@ -4,6 +4,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:provider/provider.dart';
 
 import '../models/job_data.dart';
+import '../models/status_text.dart';
 
 class HomeScreen extends StatefulWidget {
   static String id = 'home_screen';
@@ -99,6 +100,17 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _loadTestData() async {
+    final jobData = Provider.of<JobData>(context, listen: false);
+    for (var i = 0; i < 100; i++) {
+      await jobData.addJob(
+        DateTime.now().millisecondsSinceEpoch,
+        'test-$i',
+        StatusesText.created,
+      );
+    }
+  }
+
   @override
   void dispose() {
     FlutterForegroundTask.removeTaskDataCallback(_onReceiveTaskData);
@@ -129,6 +141,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _loadTestData();
+            },
+            child: const Text('Add test jobs'),
           ),
           ElevatedButton(
             onPressed: () {
