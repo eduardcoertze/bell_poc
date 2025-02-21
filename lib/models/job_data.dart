@@ -71,7 +71,7 @@ class MyTaskHandler extends TaskHandler {
     );
 
     try {
-      await executeJob(minDelay: 2, maxDelay: 10, failureChance: 0.1);
+      await executeJob(minDelay: 2, maxDelay: 10, failureChance: 0.0);
       await DatabaseHelper.instance
           .updateJob(Job(job.name, StatusesText.completed, job.id));
       print("Job completed: ${job.name}");
@@ -157,5 +157,10 @@ class JobData extends ChangeNotifier {
     await DatabaseHelper.instance.addJob(job);
     _jobs.add(job);
     notifyListeners();
+  }
+
+  Future<void> clearJobs() async {
+    await DatabaseHelper.instance.deleteJobs();
+    refreshJobs();
   }
 }

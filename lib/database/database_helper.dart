@@ -98,12 +98,19 @@ class DatabaseHelper {
     );
   }
 
+  Future<void> deleteJobs() async {
+    final db = await instance.database;
+    await db.delete(
+      'queued_jobs',
+    );
+  }
+
   Future<bool> hasPendingJobs() async {
     final db = await database;
     final result = await db.rawQuery('''
     SELECT COUNT(*) as count FROM queued_jobs 
     WHERE status NOT IN (?, ?)
-  ''', ['created', 'completed']);
+  ''', ['created', 'completed', 'failed']);
 
     final count = Sqflite.firstIntValue(result) ?? 0;
     return count > 0;

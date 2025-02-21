@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:bell_poc/screens/add_job_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:provider/provider.dart';
 
 import '../models/job_data.dart';
+import '../models/status_text.dart';
 
 class HomeScreen extends StatefulWidget {
   static String id = 'home_screen';
@@ -16,6 +19,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ValueNotifier<Object?> _taskDataListenable = ValueNotifier(null);
+  String serviceStatus = 'not running';
 
   Future<void> _requestPermissions() async {
     final NotificationPermission notificationPermission =
@@ -36,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       iosNotificationOptions: const IOSNotificationOptions(
         //TODO Show notification is still set to false here
-        showNotification: false,
+        showNotification: true,
         playSound: false,
       ),
       foregroundTaskOptions: ForegroundTaskOptions(
@@ -49,11 +53,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<ServiceRequestResult> _startService() async {
+  Future<void> _startService() async {
     if (await FlutterForegroundTask.isRunningService) {
-      return FlutterForegroundTask.restartService();
+      print("Restarting ForegroundTask Service");
+      setState(() {
+        serviceStatus = "restarting";
+      });
+      await FlutterForegroundTask.restartService();
     } else {
-      return FlutterForegroundTask.startService(
+      print("Initializing ForegroundTask Service");
+      setState(() {
+        serviceStatus = "initializing";
+      });
+      await FlutterForegroundTask.startService(
         serviceId: 256,
         notificationTitle: 'Sync in progress',
         notificationText: 'Tap to return to the app',
@@ -65,6 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
         callback: startCallback,
       );
     }
+
+    serviceStatus = await FlutterForegroundTask.isRunningService ? "running" : "not running";
+    setState(() {});
   }
 
   void _onReceiveTaskData(Object data) {
@@ -80,6 +95,19 @@ class _HomeScreenState extends State<HomeScreen> {
     return FlutterForegroundTask.stopService();
   }
 
+  void _loadTestData() async {
+    final jobData = Provider.of<JobData>(context, listen: false);
+
+    await jobData.clearJobs();
+    for (var i = 0; i < 500; i++) {
+      await jobData.addJob(
+        DateTime.now().millisecondsSinceEpoch,
+        'test-$i',
+        StatusesText.created,
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -87,10 +115,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
     FlutterForegroundTask.addTaskDataCallback(_onReceiveTaskData);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       _requestPermissions();
       _initService();
+      serviceStatus = await FlutterForegroundTask.isRunningService ? "running" : "not running";
+      setState(() {
+
+      });
     });
+
+    Timer.periodic(Duration(seconds: 5), (timer) { print("Main app still running"); });
   }
 
   @override
@@ -120,6 +154,13 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             child: const Text('Sync Jobs'),
           ),
+          ElevatedButton(
+              onPressed: () {
+                _loadTestData();
+              },
+              child: const Text('Load Test Data')
+          ),
+          Text('Service status: $serviceStatus'),
           Expanded(
             child: Consumer<JobData>(
               builder: (context, jobData, child) {
